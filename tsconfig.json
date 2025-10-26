@@ -7,13 +7,15 @@
         "experimentalDecorators": true,
         "incremental": true,
         "lib": [
-            "es2019"
+            "es2019",
+            "dom"
         ],
         "sourceMap": true,
         "alwaysStrict": true,
         "strictNullChecks": true,
         "resolveJsonModule": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "rootDir": "."
     },
     "exclude": [
