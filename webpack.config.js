@@ -31,6 +31,20 @@ const config = {
             }]
         }]
     },
+    plugins: [
+        new (require('webpack')).ProgressPlugin({
+            activeModules: false,
+            entries: true,
+            handler(percentage, message, ...args) {
+                if (percentage === 0) {
+                    console.log('\n🔨 Building...');
+                }
+                if (percentage === 1) {
+                    console.log('✅ Build complete!');
+                }
+            },
+        })
+    ],
 }
 
 module.exports = config;
