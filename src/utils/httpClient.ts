@@ -159,8 +159,12 @@ export class HttpClient {
                 const pass = args.join(' ');
                 if (normalizedScheme === 'basic') {
                     removeHeader(options.headers!, 'Authorization');
-                    options.username = user;
-                    options.password = pass;
+                    const auth = authorization.match(/basic\s+(.*)/i)?.[1]||"";
+                    const [buser, bpass] = auth.split(':', 2);
+                    if(bpass){
+                        options.username = buser;
+                        options.password = bpass;
+                    }
                 } else if (normalizedScheme === 'digest') {
                     removeHeader(options.headers!, 'Authorization');
                     options.hooks!.afterResponse!.push(digest(user, pass));
