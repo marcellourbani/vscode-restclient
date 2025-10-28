@@ -17,8 +17,8 @@ import { convertBufferToStream, convertStreamToBuffer } from './streamUtility';
 import { UserDataManager } from './userDataManager';
 import { getCurrentHttpFileName, getWorkspaceRootPath } from './workspaceUtility';
 
-import { CancelableRequest, Headers, Method, OptionsOfBufferResponseBody, Response } from 'got';
-import got = require('got');
+import {got, CancelableRequest, Headers, Method, OptionsOfBufferResponseBody, Response } from 'got';
+import { Stream } from 'stream';
 
 const encodeUrl = require('encodeurl');
 const CookieFileStore = require('tough-cookie-file-store').FileCookieStore;
@@ -46,7 +46,7 @@ export class HttpClient {
         let bodySize = 0;
         let headersSize = 0;
         const requestUrl = encodeUrl(httpRequest.url);
-        const request: CancelableRequest<Response<Buffer>> = got.default(requestUrl, options);
+        const request: CancelableRequest<Response<Buffer>> = got(requestUrl, options);
         httpRequest.setUnderlyingRequest(request);
         (request as any).on('response', res => {
             if (res.rawHeaders) {
@@ -81,6 +81,8 @@ export class HttpClient {
         const responseHeaders: ResponseHeaders = HttpClient.normalizeHeaderNames(response.headers, response.rawHeaders);
 
         const requestBody = options.body;
+        const body = Buffer.isBuffer(requestBody) ? 
+            convertBufferToStream(requestBody) : requestBody instanceof Stream ? requestBody : `${requestBody}`;
 
         return new HttpResponse(
             response.statusCode,
@@ -98,7 +100,7 @@ export class HttpClient {
                 HttpClient.normalizeHeaderNames(
                     (response as any).request.options.headers as RequestHeaders,
                     Object.keys(httpRequest.headers)),
-                Buffer.isBuffer(requestBody) ? convertBufferToStream(requestBody) : requestBody,
+                body,
                 httpRequest.rawBody,
                 httpRequest.name
             ));
@@ -132,7 +134,7 @@ export class HttpClient {
             decompress: true,
             followRedirect: settings.followRedirect,
             throwHttpErrors: false,
-            retry: 0,
+            retry: {},
             hooks: {
                 afterResponse: [],
                 beforeRequest: [],
@@ -143,7 +145,7 @@ export class HttpClient {
         };
 
         if (settings.timeoutInMilliseconds > 0) {
-            options.timeout = settings.timeoutInMilliseconds;
+            options.timeout = { request: settings.timeoutInMilliseconds };
         }
 
         if (settings.rememberCookiesForSubsequentRequests) {
